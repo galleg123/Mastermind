@@ -79,8 +79,8 @@ class Mastermind:
                 print(f"Invalid input, please write 4 colours, in the format 'XXXX', where the colour options are: {"|".join(self.colourOptions)}")
                 continue
         
-        correctColours = self.checkColours(guess)
         correctPlacement = self.checkPlacement(guess)
+        correctColours = self.checkColours(guess) - correctPlacement
 
 
         # Keeps track of guesses so far.
@@ -88,7 +88,7 @@ class Mastermind:
         self.guesses += 1
 
         # Checks if the guess just made was a correct guess.
-        if correctColours == 4 and correctPlacement == 4:
+        if correctPlacement == 4:
             self.correctAnswer = True
 
 
