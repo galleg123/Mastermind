@@ -52,7 +52,7 @@ class RowWidget(QWidget):
         self.circles = [CircleWidget() for _ in range(4)]
         for circle in self.circles:
             self.layout.addWidget(circle)
-        self.text = QLabel("", alignment=Qt.AlignCenter)
+        self.text = QLabel("", alignment=Qt.AlignLeft)
         self.layout.addWidget(self.text)
         self.setLayout(self.layout)
         
@@ -61,7 +61,7 @@ class RowWidget(QWidget):
             circle.set_color(colors[index])
     
     def set_row_text(self,correct_color, correct_placement):
-        self.text.setText(f'Correct Colors: {correct_color}\nCorrect Placement: {correct_placement}')
+        self.text.setText(f'Correct Color | Wrong Placement: {correct_color}\nCorrect Color | Correct Placement: {correct_placement}')
 
 # Class for a Row with the currently selected colors that are ready to be submitted
 class SubmitRowWidget(QWidget):
@@ -215,7 +215,7 @@ class MastermindWindow(QWidget):
             colorSum += abs(colorChecker[color])
 
         # The amount of correct colors will be 4 (max amount) with the colorSum divided by two subtracted (Division by 2 is due to each wrong having both a color not being set to 0 and a color being removed from 0)
-        correctColors = 4 - (colorSum / 2)
+        correctColors = int( 4 - (colorSum / 2))
 
         return correctColors
 
@@ -235,7 +235,7 @@ class MastermindWindow(QWidget):
         correctColors = self.checkColors(colors)
         correctPlacement = self.checkPlacement(colors)
 
-        self.rows[self.guesses].set_row_text(correctColors, correctPlacement)
+        self.rows[self.guesses].set_row_text(correctColors-correctPlacement, correctPlacement)
 
         if correctPlacement == 4:
             self.text.setText("Congratulation you guessed the sequence")
