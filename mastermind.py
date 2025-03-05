@@ -101,7 +101,7 @@ class Mastermind:
         # Loops through the guesses made so far and prints them out such that they can be analysed for making the next guess
         print("_____________________________________________________________________________\n")
         for index, guess in enumerate(self.guessHistory):
-            print(f'{"".join(guess[0])}  | Guess {index} | Correct colours: {guess[1]} | Correct Placements: {guess[2]}')
+            print(f'{"".join(guess[0])}  | Guess {index} | Correct colours: {guess[1]} | Correct colour and placements: {guess[2]}')
         print("_____________________________________________________________________________")
         print(f'\nYou have {self.maxGuesses-self.guesses} guesses left.')
         print('\nThe possible colours are:\n(R)ed, (G)reen, (B)lue, (Y)ellow, (O)range, (P)urple\n')
