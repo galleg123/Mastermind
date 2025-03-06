@@ -16,6 +16,8 @@ class CircleWidget(QWidget):
         self.color = color
         self.update()
 
+
+    # Used for drawing the circles
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
@@ -35,6 +37,7 @@ class SubmitCircleWidget(CircleWidget):
 
 # Circle childclass that makes a circle for one of the selectable colors, with special mousePressEvent
 class SelectionCircleWidget(CircleWidget):
+    # Signal is used to trigger methods in other classes
     colorSelected = Signal(QColor)
     def __init__(self, color=QColor(255,255,255)):
         super().__init__(color)
@@ -55,13 +58,18 @@ class RowWidget(QWidget):
         self.text = QLabel("", alignment=Qt.AlignLeft)
         self.layout.addWidget(self.text)
         self.setLayout(self.layout)
-        
+    
+
     def set_row_colors(self, colors):
         for index, circle in enumerate(self.circles):
             circle.set_color(colors[index])
     
+    # Shows the information about the guess
     def set_row_text(self,correct_color, correct_placement):
-        self.text.setText(f'Correct Color | Wrong Placement: {correct_color}\nCorrect Color | Correct Placement: {correct_placement}')
+        self.text.setText(f'Correct Color Wrong Placement: {correct_color} | Correct Color and Placement: {correct_placement}')
+
+    def reset_row_text(self):
+        self.text.setText("")
 
 # Class for a Row with the currently selected colors that are ready to be submitted
 class SubmitRowWidget(QWidget):
@@ -73,6 +81,7 @@ class SubmitRowWidget(QWidget):
             self.layout.addWidget(circle)
         self.setLayout(self.layout)
     
+    # Function used for setting the colors, takes the first circle that is white and colors that one
     def set_circle_color(self, color):
         for circle in self.circles:
             if circle.color == QColor(255,255,255):
@@ -84,7 +93,6 @@ class ColorSelectionWidget(QWidget):
     def __init__(self):
         super().__init__()
         self.layout = QHBoxLayout()
-
         self.colorOptions = [QColor(255,0,0), QColor(0,255,0),QColor(0,0,255), QColor(255,255,0), QColor(255,165,0), QColor(255,0,255)]
 
         self.circles = [SelectionCircleWidget(x) for x in self.colorOptions]
@@ -101,10 +109,11 @@ class SubmitWidget(QWidget):
         self.layout = QVBoxLayout()
         self.submit_layout = QHBoxLayout()
         self.selection_row = QHBoxLayout()
-        
         self.colorOptions = [QColor(255,0,0), QColor(0,255,0),QColor(0,0,255), QColor(255,255,0), QColor(255,165,0), QColor(255,0,255)]
         self.submit_row = SubmitRowWidget()
 
+
+        # Creates the circles used for selecting colors by iterating through the colors in the colorOptions variable
         self.selectionCircles = [SelectionCircleWidget(x) for x in self.colorOptions]
         for circle in self.selectionCircles:
             self.selection_row.addWidget(circle)
@@ -113,23 +122,31 @@ class SubmitWidget(QWidget):
         self.submit_layout.addWidget(self.submit_row)
         self.submit_button = QPushButton("Submit guess")
         self.submit_layout.addWidget(self.submit_button)
+
+        # Connects the button to submit guess method
         self.submit_button.clicked.connect(self.submit_guess)
+
+
         self.layout.addLayout(self.submit_layout)
         self.layout.addLayout(self.selection_row)
-
-
         self.setLayout(self.layout)
 
+    # Submits the guess
     def submit_guess(self):
         guess = []
+
+        # Makes sure there is no unset circles in the guess
         for circle in self.submit_row.circles:
             if not circle.color == QColor(255,255,255):
                 guess.append(circle.color)
             else:
                 return
+        
+        # Sends out the guess through the submitGuess signal and clears the colors
         self.submitGuess.emit(guess)
         for circle in self.submit_row.circles:
             circle.set_color(QColor(255,255,255))
+
 
 
 
@@ -142,23 +159,34 @@ class MastermindWindow(QWidget):
         self.guesses = 0
         self.maxGuesses = 12
         self.secretSequence = self.generateSequence()
-        self.correctAnswer = False
+        
 
         self.setWindowTitle("Mastermind")
 
         self.main_layout = QVBoxLayout()
 
+        # Text box that will be used later to display the outcome of the game.
         self.text = QLabel("", alignment=Qt.AlignCenter)
-
         self.main_layout.addWidget(self.text)
+
+        # Adds i the rows used for guess history
         self.rows = [RowWidget() for _ in range(12)]
         for row in self.rows:
             self.main_layout.addWidget(row)
 
+
+        # Adds in the submit widget section, aswell as binds the signal from the submit widget to the color_row method
         self.submit = SubmitWidget()
         self.submit.submitGuess.connect(self.color_row)
-
         self.main_layout.addWidget(self.submit)
+
+
+        # Restart button
+        self.restart_button = QPushButton("Restart Game")
+        self.restart_button.clicked.connect(self.restart_game)
+        self.main_layout.addWidget(self.restart_button)
+        self.restart_button.setVisible(False)
+
 
 
         self.setLayout(self.main_layout)
@@ -237,19 +265,47 @@ class MastermindWindow(QWidget):
 
         self.rows[self.guesses].set_row_text(correctColors-correctPlacement, correctPlacement)
 
+        self.guesses += 1
         if correctPlacement == 4:
             self.text.setText("Congratulation you guessed the sequence")
+            self.submit.setVisible(False)
+            self.restart_button.setVisible(True)
+
             
 
-        self.guesses += 1
 
-        if self.guesses == 12:
+        if self.guesses == 12 and correctPlacement != 4:
             self.text.setText("Unfortunately you failed to guess the sequence")
+            self.submit.setVisible(False)
+            self.restart_button.setVisible(True)
+    
+    def restart_game(self):
+        self.guesses = 0
+        self.secretSequence = self.generateSequence()
+
+        # Reset the guess history and other widgets
+        for row in self.rows:
+            row.set_row_colors([QColor(255,255,255)]*4)
+            row.reset_row_text()
+        
+        for circle in self.submit.submit_row.circles:
+            circle.set_color(QColor(255,255,255))
+
+        self.submit.setVisible(True)
+        self.submit.adjustSize()
+        self.submit.updateGeometry()
+        self.restart_button.setVisible(False)
+        self.text.setText("")
+        self.adjustSize()
+        self.updateGeometry()
+        
+
 
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MastermindWindow()
+    window.resize(400,700)
     window.show()
     sys.exit(app.exec())
