@@ -3,6 +3,7 @@ import random
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout,QHBoxLayout,QLabel, QPushButton
 from PySide6.QtCore import Signal, Qt
 from PySide6.QtGui import QPainter, QColor, QMouseEvent
+from module.save_score import SaveScore
 
 
 # Draw up a circle
@@ -270,6 +271,8 @@ class MastermindWindow(QWidget):
             self.text.setText("Congratulation you guessed the sequence")
             self.submit.setVisible(False)
             self.restart_button.setVisible(True)
+            score_submit = SaveScore(self.guesses, True)
+            score_submit.exec()
 
             
 
@@ -278,6 +281,8 @@ class MastermindWindow(QWidget):
             self.text.setText("Unfortunately you failed to guess the sequence")
             self.submit.setVisible(False)
             self.restart_button.setVisible(True)
+            score_submit = SaveScore(self.guesses, False)
+            score_submit.exec()
     
     def restart_game(self):
         self.guesses = 0
